@@ -19,24 +19,24 @@ import com.joanzapata.iconify.fonts.MaterialIcons
 import com.joanzapata.iconify.fonts.MaterialModule
 import com.mizukami2005.mizukamitakamasa.qiitaclient.client.ArticleClient
 import com.mizukami2005.mizukamitakamasa.qiitaclient.client.QiitaClient
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.ActivityMainBinding
 import com.mizukami2005.mizukamitakamasa.qiitaclient.fragment.ViewPageListFragment
-import com.mizukami2005.mizukamitakamasa.qiitaclient.model.RealmArticle
-import com.mizukami2005.mizukamitakamasa.qiitaclient.model.RealmUser
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.ResponseToken
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.User
-import com.mizukami2005.mizukamitakamasa.qiitaclient.util.PxDpUtil
 import com.mizukami2005.mizukamitakamasa.qiitaclient.util.Config
+import com.mizukami2005.mizukamitakamasa.qiitaclient.util.PxDpUtil
 import com.mizukami2005.mizukamitakamasa.qiitaclient.util.TagUtils
 import com.mizukami2005.mizukamitakamasa.qiitaclient.view.activity.ListTagActivity
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity
 import com.trello.rxlifecycle.kotlin.bindToLifecycle
 import io.realm.Realm
-import kotlinx.android.synthetic.main.activity_main.*
+import io.realm.RealmConfiguration
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.util.*
 import javax.inject.Inject
+
 
 class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
 
@@ -52,6 +52,8 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
   var state = ""
   var clientSecret = ""
 
+  lateinit var binding: ActivityMainBinding
+
   enum class ButtonState {
     OPEN, CLOSE
   }
@@ -61,18 +63,21 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
   val TOKEN_PREFERENCES_NAME = "DataToken"
   val TOKEN = "token"
 
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     (application as QiitaClientApp).component.inject(this)
-    setContentView(R.layout.activity_main)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
-    setSupportActionBar(toolbar)
+    setSupportActionBar(binding.toolbar)
 
-    tabs.tabMode = TabLayout.MODE_SCROLLABLE
+    binding.tabs.tabMode = TabLayout.MODE_SCROLLABLE
     val data = getSharedPreferences(TOKEN_PREFERENCES_NAME, Context.MODE_PRIVATE)
     val token = data.getString(TOKEN, "")
     if (token.length != 0) {
-      login_text.text = getString(R.string.logout)
+//      binding.loginText.text = getString(R.string.logout)
+      binding.loginText.text = getString(R.string.logout)
     }
 
     init()
@@ -88,7 +93,7 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
       e.printStackTrace()
     }
 
-    fab_login.setOnClickListener {
+    binding.fabLogin.setOnClickListener {
       val token = data.getString(TOKEN, "")
       if (token.length == 0) {
         val intent = Intent(Intent.ACTION_VIEW, getAuthURL(authURL, clientID, scope, state))
@@ -101,19 +106,19 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
           val editor = data.edit()
           editor.putString(TOKEN, "")
           editor.apply()
-          login_text.text = getString(R.string.login)
+          binding.loginText.text = getString(R.string.login)
         })
         builder.setNegativeButton(getString(R.string.negative_button_text), null)
         builder.create().show()
       }
     }
 
-    fab_tags_button.setOnClickListener {
+    binding.fabTagsButton.setOnClickListener {
       val tags = arrayListOf("")
       val requestCode = 1001
       ListTagActivity.intent(applicationContext, tags).let { startActivityForResult(it, requestCode) }
     }
-
+    val fab_add = binding.fabAdd
     fab_add.setOnClickListener {
       val iconWhile = PxDpUtil().dpToPx(applicationContext, 66)
       if (buttonState == ButtonState.CLOSE) {
@@ -123,15 +128,19 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
       }
     }
 
+    var fab_background = binding.fabBackground
     fab_background.setOnTouchListener { view, motionEvent ->
       true
     }
 
+    var fab_login = binding.fabLogin
     Realm.init(this)
+    val config: RealmConfiguration = RealmConfiguration.Builder().allowWritesOnUiThread(true).build()
+    Realm.setDefaultConfiguration(config)
     Iconify.with(MaterialModule())
     fab_add.setImageDrawable(IconDrawable(this, MaterialIcons.md_add).colorRes(R.color.fab_background))
     fab_login.setImageDrawable(IconDrawable(this, MaterialIcons.md_person).colorRes(R.color.fab_background))
-    fab_tags_button.setImageDrawable(IconDrawable(this, MaterialIcons.md_local_offer).colorRes(R.color.fab_background))
+    binding.fabTagsButton.setImageDrawable(IconDrawable(this, MaterialIcons.md_local_offer).colorRes(R.color.fab_background))
   }
 
   override fun onResume() {
@@ -172,6 +181,8 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
       Uri.parse("$authURL?client_id=$clientID&scope=$scope&state=$status")
 
   private fun fabOpen(iconWhile: Float) {
+    var fab_login_layout = binding.fabLoginLayout
+    var fab_tags_layout = binding.fabTagsLayout
     fab_login_layout.visibility = View.VISIBLE
     var anim = ObjectAnimator.ofFloat(fab_login_layout, "translationY", -iconWhile)
     anim.setDuration(200)
@@ -190,15 +201,19 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
     anim.setDuration(200)
     anim.start()
 
+    var fab_add = binding.fabAdd
     anim = ObjectAnimator.ofFloat(fab_add, "rotation", 45f)
     anim.setDuration(200)
     anim.start()
 
     buttonState = ButtonState.OPEN
+    var fab_background = binding.fabBackground
     fab_background.visibility = View.VISIBLE
   }
 
   private fun fabClose() {
+    var fab_login_layout = binding.fabLoginLayout
+    var fab_tags_layout = binding.fabTagsLayout
     var anim = ObjectAnimator.ofFloat(fab_login_layout, "translationY", 0f)
     anim.setDuration(200)
     anim.start()
@@ -215,16 +230,18 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
     anim.setDuration(200)
     anim.start()
 
-
+    var fab_add = binding.fabAdd
     anim = ObjectAnimator.ofFloat(fab_add, "rotation", 90f)
     anim.setDuration(200)
     anim.start()
 
+    var fab_background = binding.fabBackground
     buttonState = ButtonState.CLOSE
     fab_background.visibility = View.GONE
   }
 
   private fun init() {
+    var pager = binding.pager
     val tagLists = TagUtils().loadName(applicationContext, "TAG")
     val tags: MutableList<String> = mutableListOf("Recently")
     for (tag in tagLists) {
@@ -247,7 +264,7 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
 
     pager.addOnPageChangeListener(this)
     pager.adapter = viewPagerAdapter
-    tabs.setupWithViewPager(pager)
+    binding.tabs.setupWithViewPager(pager)
   }
 
   public override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent) {
@@ -286,7 +303,7 @@ class MainActivity : RxAppCompatActivity(), ViewPager.OnPageChangeListener {
     .subscribeOn(Schedulers.io())
     .observeOn(AndroidSchedulers.mainThread())
     .doAfterTerminate {
-      login_text.text = getString(R.string.logout)
+      binding.loginText.text = getString(R.string.logout)
     }
     .bindToLifecycle(this)
     .subscribe({

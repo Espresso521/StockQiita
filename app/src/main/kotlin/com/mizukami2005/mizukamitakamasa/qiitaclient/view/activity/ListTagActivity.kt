@@ -13,13 +13,12 @@ import com.joanzapata.iconify.fonts.MaterialIcons
 import com.mizukami2005.mizukamitakamasa.qiitaclient.QiitaClientApp
 import com.mizukami2005.mizukamitakamasa.qiitaclient.R
 import com.mizukami2005.mizukamitakamasa.qiitaclient.client.ArticleClient
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.ActivityArticleBinding
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.ActivityListTagBinding
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.ArticleTag
 import com.mizukami2005.mizukamitakamasa.qiitaclient.toast
 import com.mizukami2005.mizukamitakamasa.qiitaclient.util.TagUtils
 import com.mizukami2005.mizukamitakamasa.qiitaclient.view.adapter.ArticleTagListAdapter
-import kotlinx.android.synthetic.main.activity_list_tag.*
-import kotlinx.android.synthetic.main.view_article_tag.*
-import kotlinx.android.synthetic.main.view_article_tag.view.*
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -49,10 +48,16 @@ class ListTagActivity : AppCompatActivity() {
           .putStringArrayListExtra("${TAG_EXTRA}", tags)
   }
 
+  private lateinit var binding: ActivityListTagBinding
+
+  var toolbar = binding.toolbar
+  var list_view = binding.listView
+  var home_button = binding.homeButton
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     (application as QiitaClientApp).component.inject(this)
-    setContentView(R.layout.activity_list_tag)
+    binding = ActivityListTagBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -67,13 +72,13 @@ class ListTagActivity : AppCompatActivity() {
 
     list_view.setOnItemClickListener { adapterView, view, position, id ->
       val articleTag = listAdapter.articleTags[position]
-      if (view.tag_check_box.isChecked) {
-        view.tag_check_box.isChecked = false
-        checkTagList -= articleTag.id
-      } else {
-        view.tag_check_box.isChecked = true
-        checkTagList += articleTag.id
-      }
+//      if (view.tag_check_box.isChecked) {
+//        view.tag_check_box.isChecked = false
+//        checkTagList -= articleTag.id
+//      } else {
+//        view.tag_check_box.isChecked = true
+//        checkTagList += articleTag.id
+//      }
       TagUtils().saveName(applicationContext, "TAG", checkTagList)
     }
 

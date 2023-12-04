@@ -12,6 +12,8 @@ import android.widget.AbsListView
 import android.widget.ListView
 import com.mizukami2005.mizukamitakamasa.qiitaclient.*
 import com.mizukami2005.mizukamitakamasa.qiitaclient.client.ArticleClient
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.ActivityMainBinding
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.FragmentViewPageListBinding
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.Article
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.RealmArticle
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.RealmUser
@@ -22,11 +24,6 @@ import com.trello.rxlifecycle.kotlin.bindToLifecycle
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
-import kotlinx.android.synthetic.main.activity_list_tag.*
-import kotlinx.android.synthetic.main.activity_list_tag.view.*
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_view_page_list.*
-import kotlinx.android.synthetic.main.fragment_view_page_list.view.*
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -57,8 +54,10 @@ class ViewPageListFragment: Fragment() {
     .subscribeOn(Schedulers.io())
     .observeOn(AndroidSchedulers.mainThread())
     .doAfterTerminate {
+      var swipe_refresh = binding.swipeRefresh
+      var page_list_view = binding.pageListView
       isLoading = true
-      activity.progress_bar.visibility = View.GONE
+      //activity.progress_bar.visibility = View.GONE
       if (swipe_refresh.isRefreshing) {
         swipe_refresh.isRefreshing = false
       }
@@ -87,7 +86,7 @@ class ViewPageListFragment: Fragment() {
     .observeOn(AndroidSchedulers.mainThread())
     .doAfterTerminate {
       isLoading = true
-      activity.progress_bar.visibility = View.GONE
+      //activity.progress_bar.visibility = View.GONE
     }
     .bindToLifecycle(MainActivity())
     .subscribe({
@@ -107,12 +106,18 @@ class ViewPageListFragment: Fragment() {
     })
   }
 
+  private lateinit var binding: FragmentViewPageListBinding
+
+
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
     (context.applicationContext as QiitaClientApp).component.inject(this)
-    val view = inflater.inflate(R.layout.fragment_view_page_list, null)
-    view.swipe_refresh.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE)
+    binding = FragmentViewPageListBinding.inflate(inflater, container, false)
+    var swipe_refresh = binding.swipeRefresh
+    var page_list_view = binding.pageListView
+//    val view = inflater.inflate(R.layout.fragment_view_page_list, null)
+    swipe_refresh.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE)
 
-    view.swipe_refresh.setOnRefreshListener {
+    swipe_refresh.setOnRefreshListener {
       isRefresh = true
       deleteSavedArticle()
       listAdapter.clear()
@@ -120,10 +125,10 @@ class ViewPageListFragment: Fragment() {
       count = 1
       init()
     }
-    listView = view.page_list_view
+    listView = page_list_view
     init()
 
-    return view
+    return binding.root
   }
 
   companion object {
@@ -141,22 +146,22 @@ class ViewPageListFragment: Fragment() {
     val loadArticle = Realm.getDefaultInstance().where(RealmArticle::class.java).equalTo("type", tag).findAll()
     if (tag == "Recently") {
       if (isRefresh) {
-        activity.progress_bar.visibility = View.VISIBLE
+        //activity.progress_bar.visibility = View.VISIBLE
         getItems(articleClient.recentlySaveRealm("$count"), tag)
       } else if (loadArticle.size != 0) {
         listAdapter.articles = loadArticle(tag)
       } else {
-        activity.progress_bar.visibility = View.VISIBLE
+        //activity.progress_bar.visibility = View.VISIBLE
         getItems(articleClient.recentlySaveRealm("$count"), tag)
       }
     } else {
       if (isRefresh) {
-        activity.progress_bar.visibility = View.VISIBLE
+        //activity.progress_bar.visibility = View.VISIBLE
         getItems(articleClient.tagItemsSaveRealm(tag, "$count"), tag)
       } else if (loadArticle.size != 0) {
         listAdapter.articles = loadArticle(tag)
       } else {
-        activity.progress_bar.visibility = View.VISIBLE
+        //activity.progress_bar.visibility = View.VISIBLE
         getItems(articleClient.tagItemsSaveRealm(tag, "$count"), tag)
       }
     }
@@ -170,7 +175,7 @@ class ViewPageListFragment: Fragment() {
       override fun onScroll(absListView: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
         if (totalItemCount != 0 && totalItemCount == firstVisibleItem + visibleItemCount && isLoading) {
           isLoading = false
-          activity.progress_bar.visibility = View.VISIBLE
+          //activity.progress_bar.visibility = View.VISIBLE
           if (tag == "Recently") {
             count++
             getAddItems(articleClient.recently("$count"))
@@ -191,13 +196,13 @@ class ViewPageListFragment: Fragment() {
     var arrayArticle = emptyArray<Article>()
     for (index in loadArticle.indices) {
       var article = Article()
-      article.id = loadArticle.get(index).id as String
-      article.title = loadArticle.get(index).title as String
-      article.url = loadArticle.get(index).url as String
-      article.body = loadArticle.get(index).body as String
-      article.user = User(loadArticle.get(index).user?.id as String, loadArticle.get(index).user?.name as String, loadArticle.get(index).user?.profileImageUrl as String)
-      article.type = loadArticle.get(index).type as String
-      article.createdAt = loadArticle.get(index).createdAt as String
+      article.id = loadArticle.get(index)?.id as String
+      article.title = loadArticle.get(index)?.title as String
+      article.url = loadArticle.get(index)!!.url as String
+      article.body = loadArticle.get(index)!!.body as String
+      article.user = User(loadArticle.get(index)!!.user?.id as String, loadArticle.get(index)!!.user?.name as String, loadArticle.get(index)!!.user?.profileImageUrl as String)
+      article.type = loadArticle.get(index)!!.type as String
+      article.createdAt = loadArticle.get(index)!!.createdAt as String
       arrayArticle += article
     }
     return arrayArticle

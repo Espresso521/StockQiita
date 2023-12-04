@@ -18,10 +18,11 @@ import com.mizukami2005.mizukamitakamasa.qiitaclient.MainActivity
 import com.mizukami2005.mizukamitakamasa.qiitaclient.QiitaClientApp
 import com.mizukami2005.mizukamitakamasa.qiitaclient.R
 import com.mizukami2005.mizukamitakamasa.qiitaclient.client.ArticleClient
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.ActivityArticleBinding
+import com.mizukami2005.mizukamitakamasa.qiitaclient.databinding.ActivityMainBinding
 import com.mizukami2005.mizukamitakamasa.qiitaclient.model.Article
 import com.mizukami2005.mizukamitakamasa.qiitaclient.toast
 import com.trello.rxlifecycle.kotlin.bindToLifecycle
-import kotlinx.android.synthetic.main.activity_article.*
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -52,12 +53,29 @@ class ArticleActivity : AppCompatActivity() {
         Intent(context, ArticleActivity::class.java)
             .putExtra(ARTICLE_EXTRA, article)
   }
+  private lateinit var binding: ActivityArticleBinding
 
+//  var toolbar = binding.toolbar
+//  var article_view = binding.articleView
+//  var markdown_view = binding.markdownView
+//
+//  var app_bar = binding.appBar
+//  var collapsing_toolbar = binding.collapsingToolbar
+//  var toolbar_text_view = binding.toolbarTextView
+//  var stock_button = binding.stockButton
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     (application as QiitaClientApp).component.inject(this)
-    setContentView(R.layout.activity_article)
+    binding = ActivityArticleBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+  var article_view = binding.articleView
+  var markdown_view = binding.markdownView
 
+  var app_bar = binding.appBar
+  var collapsing_toolbar = binding.collapsingToolbar
+  var toolbar_text_view = binding.toolbarTextView
+  var stock_button = binding.stockButton
+  var toolbar = binding.toolbar
     article = intent.getParcelableExtra(ARTICLE_EXTRA)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -120,6 +138,13 @@ class ArticleActivity : AppCompatActivity() {
       val stateList = ColorStateList(
           arrayOf<IntArray>(intArrayOf()), intArrayOf(Color.parseColor("#C9302C"))
       )
+      var article_view = binding.articleView
+      var markdown_view = binding.markdownView
+
+      var app_bar = binding.appBar
+      var collapsing_toolbar = binding.collapsingToolbar
+      var toolbar_text_view = binding.toolbarTextView
+      var stock_button = binding.stockButton
       stock_button.backgroundTintList = stateList
       stock_button.setImageDrawable(IconDrawable(this, MaterialIcons.md_folder).colorRes(R.color.fab_background))
       checkStock = true
@@ -152,6 +177,13 @@ class ArticleActivity : AppCompatActivity() {
   }
 
   private fun changeStockUnstock() {
+    var article_view = binding.articleView
+    var markdown_view = binding.markdownView
+
+    var app_bar = binding.appBar
+    var collapsing_toolbar = binding.collapsingToolbar
+    var toolbar_text_view = binding.toolbarTextView
+    var stock_button = binding.stockButton
     if (token.length != 0 && !checkStock) {
       val stateList = ColorStateList(
           arrayOf<IntArray>(intArrayOf()), intArrayOf(Color.parseColor("#C9302C"))
